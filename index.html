@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CurbAppeal AI - Turn Dark Listings Into Sold Properties</title>
+  <meta name="description" content="AI-powered real estate photo enhancer. Instant HDR lighting, sky replacement, and window pulls for listing-ready photos." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z'/><circle cx='12' cy='13' r='3'/></svg>" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React and Babel CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 0.3; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // SVG Icons matching Lucide icons
+    const Camera = ({ className = "w-5 h-5" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+        <circle cx="12" cy="13" r="3"/>
+      </svg>
+    );
+
+    const Sun = ({ className = "w-5 h-5" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+      </svg>
+    );
+
+    const Wand2 = ({ className = "w-5 h-5" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/>
+        <path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/>
+      </svg>
+    );
+
+    const CheckCircle2 = ({ className = "w-5 h-5" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+      </svg>
+    );
+
+    const UploadCloud = ({ className = "w-5 h-5" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/>
+      </svg>
+    );
+
+    const ImageIcon = ({ className = "w-5 h-5" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+      </svg>
+    );
+
+    const LayoutDashboard = ({ className = "w-5 h-5" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
+      </svg>
+    );
+
+    const Settings = ({ className = "w-5 h-5" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    );
+
+    const LogOut = ({ className = "w-5 h-5" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>
+      </svg>
+    );
+
+    const ChevronRight = ({ className = "w-4 h-4" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="m9 18 6-6-6-6"/>
+      </svg>
+    );
+
+    const ArrowRight = ({ className = "w-5 h-5" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+      </svg>
+    );
+
+    const MoveHorizontal = ({ className = "w-5 h-5" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <polyline points="18 8 22 12 18 16"/><polyline points="6 8 2 12 6 16"/><line x1="2" x2="22" y1="12" y2="12"/>
+      </svg>
+    );
+
+    function CurbAppealApp() {
+      const [currentView, setCurrentView] = useState('landing');
+
+      return (
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100">
+          {currentView === 'landing' ? (
+            <LandingPage onLogin={() => setCurrentView('dashboard')} />
+          ) : (
+            <Dashboard onLogout={() => setCurrentView('landing')} />
+          )}
+        </div>
+      );
+    }
+
+    function LandingPage({ onLogin }) {
+      return (
+        <div className="flex flex-col min-h-screen">
+          {/* Navigation */}
+          <nav className="w-full bg-white border-b border-slate-200 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+              <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+                <div className="bg-blue-600 p-2 rounded-lg">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+                <span className="font-bold text-xl tracking-tight text-slate-900">CurbAppeal AI</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <a href="#features" className="text-slate-600 hover:text-slate-900 font-medium text-sm hidden sm:block">
+                  Features
+                </a>
+                <a href="#pricing" className="text-slate-600 hover:text-slate-900 font-medium text-sm hidden sm:block">
+                  Pricing
+                </a>
+                <button 
+                  onClick={onLogin}
+                  className="text-slate-600 hover:text-slate-900 font-medium text-sm px-3 py-2"
+                >
+                  Sign In
+                </button>
+                <button 
+                  onClick={onLogin}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors shadow-sm"
+                >
+                  Start Free Trial
+                </button>
+              </div>
+            </div>
+          </nav>
+
+          {/* Hero Section */}
+          <main className="flex-grow">
+            <section className="relative pt-20 pb-32 overflow-hidden">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium mb-8 border border-blue-100">
+                  <Wand2 className="w-4 h-4" />
+                  <span>V2.0 is live: Now with automatic sky replacement</span>
+                </div>
+                <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight max-w-4xl mx-auto leading-tight">
+                  Turn dark listings into <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">sold properties.</span>
+                </h1>
+                <p className="mt-6 text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                  Upload raw, poorly lit real estate photos. Get back stunning, HDR-quality, listing-ready images in seconds using our specialized AI. No manual editing required.
+                </p>
+                <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+                  <button 
+                    onClick={onLogin}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 group"
+                  >
+                    Try it for free
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  <button 
+                    onClick={onLogin}
+                    className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-sm"
+                  >
+                    View Gallery
+                  </button>
+                </div>
+                <p className="mt-4 text-sm text-slate-500">No credit card required • 10 free edits</p>
+              </div>
+              
+              {/* Decorative background blur */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-blue-400/20 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+            </section>
+
+            {/* Features Grid */}
+            <section id="features" className="py-24 bg-white">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-16">
+                  <h2 className="text-3xl font-bold text-slate-900">Everything you need to showcase properties</h2>
+                  <p className="mt-4 text-lg text-slate-600">Built specifically for real estate agents and photographers.</p>
+                </div>
+                
+                <div className="grid md:grid-cols-3 gap-8">
+                  <FeatureCard 
+                    icon={<Sun className="w-6 h-6 text-amber-500" />}
+                    title="1-Click HDR Lighting"
+                    description="Our AI balances shadows and highlights perfectly, simulating bracketed HDR photography from a single shot."
+                  />
+                  <FeatureCard 
+                    icon={<ImageIcon className="w-6 h-6 text-blue-500" />}
+                    title="Auto Sky Replacement"
+                    description="Gloomy day? We automatically detect dull skies and replace them with beautiful, natural-looking sunny skies."
+                  />
+                  <FeatureCard 
+                    icon={<Camera className="w-6 h-6 text-emerald-500" />}
+                    title="Window Pulls"
+                    description="Never lose the view again. We fix blown-out windows so potential buyers can see exactly what's outside."
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Pricing */}
+            <section id="pricing" className="py-24 bg-slate-50">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-16">
+                  <h2 className="text-3xl font-bold text-slate-900">Simple, transparent pricing</h2>
+                  <p className="mt-4 text-lg text-slate-600">Pay as you go or subscribe for massive discounts.</p>
+                </div>
+                
+                <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                  <PricingCard 
+                    tier="Starter"
+                    price="Free"
+                    description="Perfect for testing the waters."
+                    features={["10 free image edits", "Standard resolution", "Watermarked"]}
+                    buttonText="Start Free"
+                    onClick={onLogin}
+                  />
+                  <PricingCard 
+                    tier="Pro Agent"
+                    price="$29"
+                    period="/mo"
+                    description="Everything an active agent needs."
+                    features={["100 image edits / month", "High-res downloads", "No watermarks", "Auto sky replacement"]}
+                    isPopular
+                    buttonText="Subscribe Now"
+                    onClick={onLogin}
+                  />
+                  <PricingCard 
+                    tier="Brokerage"
+                    price="$99"
+                    period="/mo"
+                    description="For teams and high-volume shooters."
+                    features={["Unlimited edits", "API Access", "Team accounts", "Priority processing"]}
+                    buttonText="Contact Sales"
+                    onClick={onLogin}
+                  />
+                </div>
+              </div>
+            </section>
+          </main>
+
+          {/* Footer */}
+          <footer className="bg-slate-900 text-slate-400 py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Camera className="w-6 h-6 text-blue-500" />
+                <span className="font-bold text-xl text-white">CurbAppeal AI</span>
+              </div>
+              <p>© 2026 CurbAppeal AI Inc. All rights reserved.</p>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    function FeatureCard({ icon, title, description }) {
+      return (
+        <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow">
+          <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center mb-6">
+            {icon}
+          </div>
+          <h3 className="text-xl font-bold text-slate-900 mb-3">{title}</h3>
+          <p className="text-slate-600 leading-relaxed">{description}</p>
+        </div>
+      );
+    }
+
+    function PricingCard({ tier, price, period, description, features, isPopular, buttonText, onClick }) {
+      return (
+        <div className={`relative bg-white rounded-2xl p-8 border ${isPopular ? 'border-blue-500 shadow-xl shadow-blue-100 scale-105 z-10' : 'border-slate-200 shadow-sm'}`}>
+          {isPopular && (
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-bold tracking-wide">
+              MOST POPULAR
+            </div>
+          )}
+          <h3 className="text-xl font-bold text-slate-900">{tier}</h3>
+          <div className="mt-4 flex items-baseline text-5xl font-extrabold text-slate-900">
+            {price}
+            {period && <span className="ml-1 text-xl font-medium text-slate-500">{period}</span>}
+          </div>
+          <p className="mt-4 text-slate-600">{description}</p>
+          <ul className="mt-8 space-y-4">
+            {features.map((feature, idx) => (
+              <li key={idx} className="flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                <span className="text-slate-700">{feature}</span>
+              </li>
+            ))}
+          </ul>
+          <button 
+            onClick={onClick}
+            className={`mt-8 w-full py-3 px-4 rounded-xl font-bold transition-colors ${
+              isPopular 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' 
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-900'
+            }`}
+          >
+            {buttonText}
+          </button>
+        </div>
+      );
+    }
+
+    function Dashboard({ onLogout }) {
+      const [file, setFile] = useState(null);
+      const [customImage, setCustomImage] = useState(null);
+      const [processingState, setProcessingState] = useState('idle');
+      const [progress, setProgress] = useState(0);
+      const fileInputRef = useRef(null);
+
+      const handleSimulatedUpload = (customImgUrl = null) => {
+        if (customImgUrl) {
+          setCustomImage(customImgUrl);
+        }
+        setProcessingState('uploading');
+        setProgress(0);
+        
+        let progressVal = 0;
+        const uploadInterval = setInterval(() => {
+          progressVal += 5;
+          setProgress(progressVal);
+          if (progressVal >= 100) {
+            clearInterval(uploadInterval);
+            setProcessingState('processing');
+            setProgress(0);
+            
+            let processVal = 0;
+            const processInterval = setInterval(() => {
+              processVal += 2;
+              setProgress(processVal);
+              if (processVal >= 100) {
+                clearInterval(processInterval);
+                setProcessingState('complete');
+              }
+            }, 50);
+          }
+        }, 30);
+      };
+
+      const handleFileSelect = (e) => {
+        const selectedFile = e.target.files && e.target.files[0];
+        if (selectedFile) {
+          setFile(selectedFile.name);
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            handleSimulatedUpload(event.target.result);
+          };
+          reader.readAsDataURL(selectedFile);
+        }
+      };
+
+      const resetUploader = () => {
+        setFile(null);
+        setCustomImage(null);
+        setProcessingState('idle');
+        setProgress(0);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      };
+
+      return (
+        <div className="flex h-screen overflow-hidden bg-slate-100">
+          {/* Sidebar */}
+          <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex">
+            <div className="h-16 flex items-center px-6 border-b border-slate-200">
+              <div className="flex items-center gap-2 cursor-pointer" onClick={onLogout}>
+                <div className="bg-blue-600 p-1.5 rounded-md">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+                <span className="font-bold text-lg text-slate-900">CurbAppeal</span>
+              </div>
+            </div>
+            <nav className="flex-1 px-4 py-6 space-y-1">
+              <DashboardNavLink icon={<LayoutDashboard />} label="Enhancer" active />
+              <DashboardNavLink icon={<ImageIcon />} label="My Gallery" />
+              <DashboardNavLink icon={<Settings />} label="Settings" />
+            </nav>
+            <div className="p-4 border-t border-slate-200">
+              <div className="flex items-center justify-between px-2 py-2">
+                <div className="text-sm">
+                  <p className="font-medium text-slate-900">Agent Account</p>
+                  <p className="text-slate-500">9 edits remaining</p>
+                </div>
+                <button onClick={onLogout} className="text-slate-400 hover:text-red-500 transition-colors" title="Logout">
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 flex flex-col h-full overflow-y-auto">
+            {/* Mobile Header */}
+            <header className="md:hidden bg-white h-16 border-b border-slate-200 flex items-center justify-between px-4">
+              <div className="flex items-center gap-2">
+                <Camera className="w-6 h-6 text-blue-600" />
+                <span className="font-bold text-lg">CurbAppeal</span>
+              </div>
+              <button onClick={onLogout} className="text-slate-500">
+                <LogOut className="w-5 h-5" />
+              </button>
+            </header>
+
+            <div className="flex-1 p-6 md:p-10">
+              <div className="max-w-4xl mx-auto space-y-8">
+                
+                <header>
+                  <h1 className="text-2xl font-bold text-slate-900">Enhance Property Photo</h1>
+                  <p className="text-slate-500 mt-1">Upload a raw image to instantly apply professional real estate lighting.</p>
+                </header>
+
+                {/* Uploader / Processor / Result Area */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-10">
+                  
+                  {processingState === 'idle' && (
+                    <div>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileSelect} 
+                        accept="image/*" 
+                        className="hidden" 
+                      />
+                      <div 
+                        onClick={() => {
+                          setFile('sample-villa.jpg');
+                          handleSimulatedUpload();
+                        }}
+                        className="border-2 border-dashed border-slate-300 rounded-xl p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 hover:border-blue-400 transition-colors group"
+                      >
+                        <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                          <UploadCloud className="w-8 h-8" />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 mb-1">Click to test sample or drag photo here</h3>
+                        <p className="text-slate-500 text-sm max-w-sm">
+                          Supports JPG, PNG, RAW formats up to 25MB.
+                        </p>
+                        <div className="mt-6 flex gap-3">
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (fileInputRef.current) fileInputRef.current.click();
+                            }}
+                            className="bg-slate-900 text-white px-6 py-2 rounded-lg font-medium text-sm hover:bg-slate-800 transition-colors"
+                          >
+                            Browse Files
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFile('sample-luxury-home.jpg');
+                              handleSimulatedUpload();
+                            }}
+                            className="bg-blue-50 text-blue-700 border border-blue-200 px-6 py-2 rounded-lg font-medium text-sm hover:bg-blue-100 transition-colors"
+                          >
+                            Quick Demo Photo
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(processingState === 'uploading' || processingState === 'processing') && (
+                    <div className="py-20 flex flex-col items-center justify-center text-center">
+                      <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center mb-8 relative">
+                        <Wand2 className={`w-10 h-10 text-blue-500 ${processingState === 'processing' ? 'animate-bounce' : ''}`} />
+                        <div className="absolute inset-0 border-4 border-blue-500 rounded-2xl animate-ping opacity-20"></div>
+                      </div>
+                      
+                      <h3 className="text-2xl font-bold text-slate-900 mb-2">
+                        {processingState === 'uploading' ? 'Uploading Image...' : 'Applying AI Magic...'}
+                      </h3>
+                      <p className="text-slate-500 mb-8 max-w-sm">
+                        {processingState === 'uploading' 
+                          ? 'Securely transferring your file to our servers.' 
+                          : 'Analyzing lighting, recovering shadows, and replacing the sky.'}
+                      </p>
+                      
+                      <div className="w-full max-w-md bg-slate-100 rounded-full h-3 overflow-hidden">
+                        <div 
+                          className="bg-blue-600 h-full rounded-full transition-all duration-100 ease-out"
+                          style={{ width: `${progress}%` }}
+                        ></div>
+                      </div>
+                      <div className="text-sm text-slate-400 mt-2 font-medium">
+                        {progress}% Complete
+                      </div>
+                    </div>
+                  )}
+
+                  {processingState === 'complete' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+                            <CheckCircle2 className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-slate-900">Enhancement Complete</h3>
+                            <p className="text-sm text-slate-500">Drag the slider to compare.</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={resetUploader}
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          Upload Another
+                        </button>
+                      </div>
+
+                      {/* Interactive Slider */}
+                      <div className="rounded-xl overflow-hidden border border-slate-200 shadow-md">
+                        <BeforeAfterSlider customImg={customImage} />
+                      </div>
+
+                      <div className="flex justify-end gap-3 pt-4">
+                        <button 
+                          onClick={() => alert("Photo saved to your gallery!")}
+                          className="px-6 py-2 rounded-lg font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+                        >
+                          Save to Gallery
+                        </button>
+                        <button 
+                          onClick={() => alert("Downloading high-resolution HDR photo...")}
+                          className="px-6 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-2"
+                        >
+                          Download HD
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    function DashboardNavLink({ icon, label, active }) {
+      return (
+        <a 
+          href="#" 
+          onClick={(e) => e.preventDefault()}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${
+            active 
+              ? 'bg-blue-50 text-blue-700' 
+              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+          }`}
+        >
+          <div className={active ? 'text-blue-600' : 'text-slate-400'}>
+            {icon}
+          </div>
+          {label}
+        </a>
+      );
+    }
+
+    function BeforeAfterSlider({ customImg }) {
+      const [sliderPosition, setSliderPosition] = useState(50);
+      const containerRef = useRef(null);
+
+      const handleSliderChange = (e) => {
+        setSliderPosition(e.target.value);
+      };
+
+      const imageUrl = customImg || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
+
+      return (
+        <div 
+          className="relative w-full aspect-video bg-slate-200 group select-none"
+          ref={containerRef}
+        >
+          {/* AFTER Image (Enhanced) */}
+          <img 
+            src={imageUrl} 
+            alt="Enhanced property" 
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          />
+          <div className="absolute top-4 right-4 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm opacity-90 pointer-events-none z-10">
+            AI ENHANCED
+          </div>
+
+          {/* BEFORE Image (Raw/Dull) */}
+          <div 
+            className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none"
+            style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
+          >
+            <img 
+              src={imageUrl} 
+              alt="Original property" 
+              className="absolute inset-0 w-full h-full object-cover max-w-none pointer-events-none"
+              style={{ 
+                filter: 'brightness(0.65) contrast(0.85) saturate(0.7) sepia(0.2)' 
+              }}
+            />
+            <div className="absolute top-4 left-4 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded shadow-sm opacity-90 z-10">
+              ORIGINAL
+            </div>
+          </div>
+
+          {/* Slider Input */}
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={sliderPosition}
+            onChange={handleSliderChange}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20"
+            aria-label="Image comparison slider"
+          />
+
+          {/* Custom Handle Visual */}
+          <div 
+            className="absolute inset-y-0 w-1 bg-white shadow-[0_0_10px_rgba(0,0,0,0.5)] pointer-events-none z-10"
+            style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
+          >
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center">
+              <MoveHorizontal className="w-5 h-5 text-slate-700" />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<CurbAppealApp />);
+  </script>
+</body>
+</html>
