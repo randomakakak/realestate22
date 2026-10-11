@@ -1,13 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CurbAppeal AI - Turn Dark Listings Into Sold Properties</title>
-  <meta name="description" content="AI-powered real estate photo enhancer. Instant HDR lighting, sky replacement, and window pulls for listing-ready photos." />
+  <meta name="description" content="AI-powered real estate photo enhancer with Dark Mode. Instant HDR lighting, sky replacement, and window pulls for listing-ready photos." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z'/><circle cx='12' cy='13' r='3'/></svg>" />
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS CDN with dark mode enabled -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {}
+      }
+    };
+  </script>
   <!-- React and Babel CDN -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -20,13 +28,13 @@
     }
   </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100">
+<body class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-blue-100 dark:selection:bg-blue-900 transition-colors duration-200">
   <div id="root"></div>
 
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
-    // SVG Icons matching Lucide icons
+    // SVG Icons
     const Camera = ({ className = "w-5 h-5" }) => (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
@@ -38,6 +46,12 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <circle cx="12" cy="12" r="4"/>
         <path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+      </svg>
+    );
+
+    const Moon = ({ className = "w-5 h-5" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
       </svg>
     );
 
@@ -103,42 +117,82 @@
       </svg>
     );
 
+    function ThemeToggleButton({ isDarkMode, onToggleTheme }) {
+      return (
+        <button
+          onClick={onToggleTheme}
+          className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          aria-label="Toggle theme"
+        >
+          {isDarkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
+        </button>
+      );
+    }
+
     function CurbAppealApp() {
       const [currentView, setCurrentView] = useState('landing');
+      const [isDarkMode, setIsDarkMode] = useState(() => {
+        const saved = localStorage.getItem('curbappeal_theme');
+        return saved ? saved === 'dark' : true; // Default to dark mode
+      });
+
+      useEffect(() => {
+        if (isDarkMode) {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('curbappeal_theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('curbappeal_theme', 'light');
+        }
+      }, [isDarkMode]);
+
+      const toggleDarkMode = () => setIsDarkMode(prev => !prev);
 
       return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-blue-100 dark:selection:bg-blue-900 transition-colors duration-200">
           {currentView === 'landing' ? (
-            <LandingPage onLogin={() => setCurrentView('dashboard')} />
+            <LandingPage 
+              onLogin={() => setCurrentView('dashboard')} 
+              isDarkMode={isDarkMode}
+              onToggleTheme={toggleDarkMode}
+            />
           ) : (
-            <Dashboard onLogout={() => setCurrentView('landing')} />
+            <Dashboard 
+              onLogout={() => setCurrentView('landing')} 
+              isDarkMode={isDarkMode}
+              onToggleTheme={toggleDarkMode}
+            />
           )}
         </div>
       );
     }
 
-    function LandingPage({ onLogin }) {
+    function LandingPage({ onLogin, isDarkMode, onToggleTheme }) {
       return (
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
           {/* Navigation */}
-          <nav className="w-full bg-white border-b border-slate-200 sticky top-0 z-50">
+          <nav className="w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 transition-colors">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
               <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-                <div className="bg-blue-600 p-2 rounded-lg">
+                <div className="bg-blue-600 p-2 rounded-lg shadow-md shadow-blue-500/20">
                   <Camera className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-bold text-xl tracking-tight text-slate-900">CurbAppeal AI</span>
+                <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">CurbAppeal AI</span>
               </div>
-              <div className="flex items-center gap-4">
-                <a href="#features" className="text-slate-600 hover:text-slate-900 font-medium text-sm hidden sm:block">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <a href="#features" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium text-sm hidden sm:block">
                   Features
                 </a>
-                <a href="#pricing" className="text-slate-600 hover:text-slate-900 font-medium text-sm hidden sm:block">
+                <a href="#pricing" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium text-sm hidden sm:block">
                   Pricing
                 </a>
+                
+                <ThemeToggleButton isDarkMode={isDarkMode} onToggleTheme={onToggleTheme} />
+
                 <button 
                   onClick={onLogin}
-                  className="text-slate-600 hover:text-slate-900 font-medium text-sm px-3 py-2"
+                  className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium text-sm px-3 py-2"
                 >
                   Sign In
                 </button>
@@ -156,44 +210,43 @@
           <main className="flex-grow">
             <section className="relative pt-20 pb-32 overflow-hidden">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium mb-8 border border-blue-100">
-                  <Wand2 className="w-4 h-4" />
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-sm font-medium mb-8 border border-blue-200 dark:border-blue-800/60">
+                  <Wand2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span>V2.0 is live: Now with automatic sky replacement</span>
                 </div>
-                <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight max-w-4xl mx-auto leading-tight">
-                  Turn dark listings into <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">sold properties.</span>
+                <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight max-w-4xl mx-auto leading-tight">
+                  Turn dark listings into <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400">sold properties.</span>
                 </h1>
-                <p className="mt-6 text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                <p className="mt-6 text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
                   Upload raw, poorly lit real estate photos. Get back stunning, HDR-quality, listing-ready images in seconds using our specialized AI. No manual editing required.
                 </p>
                 <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
                   <button 
                     onClick={onLogin}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 group"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 group"
                   >
                     Try it for free
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </button>
                   <button 
                     onClick={onLogin}
-                    className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-sm"
+                    className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-sm"
                   >
                     View Gallery
                   </button>
                 </div>
-                <p className="mt-4 text-sm text-slate-500">No credit card required • 10 free edits</p>
+                <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">No credit card required • 10 free edits</p>
               </div>
               
-              {/* Decorative background blur */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-blue-400/20 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-blue-500/10 dark:bg-blue-500/15 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
             </section>
 
             {/* Features Grid */}
-            <section id="features" className="py-24 bg-white">
+            <section id="features" className="py-24 bg-white dark:bg-slate-900/60 border-y border-slate-200/80 dark:border-slate-800/80 transition-colors">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
-                  <h2 className="text-3xl font-bold text-slate-900">Everything you need to showcase properties</h2>
-                  <p className="mt-4 text-lg text-slate-600">Built specifically for real estate agents and photographers.</p>
+                  <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Everything you need to showcase properties</h2>
+                  <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">Built specifically for real estate agents and photographers.</p>
                 </div>
                 
                 <div className="grid md:grid-cols-3 gap-8">
@@ -217,14 +270,14 @@
             </section>
 
             {/* Pricing */}
-            <section id="pricing" className="py-24 bg-slate-50">
+            <section id="pricing" className="py-24 bg-slate-50 dark:bg-slate-950 transition-colors">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
-                  <h2 className="text-3xl font-bold text-slate-900">Simple, transparent pricing</h2>
-                  <p className="mt-4 text-lg text-slate-600">Pay as you go or subscribe for massive discounts.</p>
+                  <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Simple, transparent pricing</h2>
+                  <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">Pay as you go or subscribe for massive discounts.</p>
                 </div>
                 
-                <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
                   <PricingCard 
                     tier="Starter"
                     price="Free"
@@ -258,13 +311,13 @@
           </main>
 
           {/* Footer */}
-          <footer className="bg-slate-900 text-slate-400 py-12">
+          <footer className="bg-slate-900 dark:bg-black text-slate-400 py-12 border-t border-slate-800">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <div className="flex items-center justify-center gap-2 mb-4">
                 <Camera className="w-6 h-6 text-blue-500" />
                 <span className="font-bold text-xl text-white">CurbAppeal AI</span>
               </div>
-              <p>© 2026 CurbAppeal AI Inc. All rights reserved.</p>
+              <p className="text-sm">© 2026 CurbAppeal AI Inc. All rights reserved.</p>
             </div>
           </footer>
         </div>
@@ -273,44 +326,50 @@
 
     function FeatureCard({ icon, title, description }) {
       return (
-        <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow">
-          <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center mb-6">
+        <div className="bg-slate-50 dark:bg-slate-900/90 p-8 rounded-2xl border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+          <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center mb-6">
             {icon}
           </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-3">{title}</h3>
-          <p className="text-slate-600 leading-relaxed">{description}</p>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{title}</h3>
+          <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{description}</p>
         </div>
       );
     }
 
     function PricingCard({ tier, price, period, description, features, isPopular, buttonText, onClick }) {
       return (
-        <div className={`relative bg-white rounded-2xl p-8 border ${isPopular ? 'border-blue-500 shadow-xl shadow-blue-100 scale-105 z-10' : 'border-slate-200 shadow-sm'}`}>
-          {isPopular && (
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-bold tracking-wide">
-              MOST POPULAR
+        <div className={`relative bg-white dark:bg-slate-900 rounded-2xl p-8 border flex flex-col justify-between ${
+          isPopular 
+            ? 'border-blue-500 shadow-xl shadow-blue-500/10 scale-105 z-10 ring-2 ring-blue-500' 
+            : 'border-slate-200 dark:border-slate-800 shadow-sm'
+        }`}>
+          <div>
+            {isPopular && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold tracking-wide shadow-md">
+                MOST POPULAR
+              </div>
+            )}
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{tier}</h3>
+            <div className="mt-4 flex items-baseline text-5xl font-extrabold text-slate-900 dark:text-white">
+              {price}
+              {period && <span className="ml-1 text-xl font-medium text-slate-500 dark:text-slate-400">{period}</span>}
             </div>
-          )}
-          <h3 className="text-xl font-bold text-slate-900">{tier}</h3>
-          <div className="mt-4 flex items-baseline text-5xl font-extrabold text-slate-900">
-            {price}
-            {period && <span className="ml-1 text-xl font-medium text-slate-500">{period}</span>}
+            <p className="mt-4 text-slate-600 dark:text-slate-400">{description}</p>
+            <ul className="mt-8 space-y-4">
+              {features.map((feature, idx) => (
+                <li key={idx} className="flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                  <span className="text-slate-700 dark:text-slate-300">{feature}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <p className="mt-4 text-slate-600">{description}</p>
-          <ul className="mt-8 space-y-4">
-            {features.map((feature, idx) => (
-              <li key={idx} className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                <span className="text-slate-700">{feature}</span>
-              </li>
-            ))}
-          </ul>
           <button 
             onClick={onClick}
-            className={`mt-8 w-full py-3 px-4 rounded-xl font-bold transition-colors ${
+            className={`mt-8 w-full py-3 px-4 rounded-xl font-bold transition-all ${
               isPopular 
-                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' 
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-900'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20' 
+                : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white'
             }`}
           >
             {buttonText}
@@ -319,7 +378,7 @@
       );
     }
 
-    function Dashboard({ onLogout }) {
+    function Dashboard({ onLogout, isDarkMode, onToggleTheme }) {
       const [file, setFile] = useState(null);
       const [customImage, setCustomImage] = useState(null);
       const [processingState, setProcessingState] = useState('idle');
@@ -378,27 +437,28 @@
       };
 
       return (
-        <div className="flex h-screen overflow-hidden bg-slate-100">
+        <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-950 transition-colors duration-200">
           {/* Sidebar */}
-          <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex">
-            <div className="h-16 flex items-center px-6 border-b border-slate-200">
+          <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col hidden md:flex transition-colors">
+            <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-2 cursor-pointer" onClick={onLogout}>
                 <div className="bg-blue-600 p-1.5 rounded-md">
                   <Camera className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-bold text-lg text-slate-900">CurbAppeal</span>
+                <span className="font-bold text-lg text-slate-900 dark:text-white">CurbAppeal</span>
               </div>
+              <ThemeToggleButton isDarkMode={isDarkMode} onToggleTheme={onToggleTheme} />
             </div>
             <nav className="flex-1 px-4 py-6 space-y-1">
               <DashboardNavLink icon={<LayoutDashboard />} label="Enhancer" active />
               <DashboardNavLink icon={<ImageIcon />} label="My Gallery" />
               <DashboardNavLink icon={<Settings />} label="Settings" />
             </nav>
-            <div className="p-4 border-t border-slate-200">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800">
               <div className="flex items-center justify-between px-2 py-2">
                 <div className="text-sm">
-                  <p className="font-medium text-slate-900">Agent Account</p>
-                  <p className="text-slate-500">9 edits remaining</p>
+                  <p className="font-medium text-slate-900 dark:text-white">Agent Account</p>
+                  <p className="text-slate-500 dark:text-slate-400">9 edits remaining</p>
                 </div>
                 <button onClick={onLogout} className="text-slate-400 hover:text-red-500 transition-colors" title="Logout">
                   <LogOut className="w-5 h-5" />
@@ -410,26 +470,29 @@
           {/* Main Content */}
           <main className="flex-1 flex flex-col h-full overflow-y-auto">
             {/* Mobile Header */}
-            <header className="md:hidden bg-white h-16 border-b border-slate-200 flex items-center justify-between px-4">
+            <header className="md:hidden bg-white dark:bg-slate-900 h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4">
               <div className="flex items-center gap-2">
                 <Camera className="w-6 h-6 text-blue-600" />
-                <span className="font-bold text-lg">CurbAppeal</span>
+                <span className="font-bold text-lg dark:text-white">CurbAppeal</span>
               </div>
-              <button onClick={onLogout} className="text-slate-500">
-                <LogOut className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <ThemeToggleButton isDarkMode={isDarkMode} onToggleTheme={onToggleTheme} />
+                <button onClick={onLogout} className="text-slate-500 dark:text-slate-400 p-2">
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
             </header>
 
             <div className="flex-1 p-6 md:p-10">
               <div className="max-w-4xl mx-auto space-y-8">
                 
                 <header>
-                  <h1 className="text-2xl font-bold text-slate-900">Enhance Property Photo</h1>
-                  <p className="text-slate-500 mt-1">Upload a raw image to instantly apply professional real estate lighting.</p>
+                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Enhance Property Photo</h1>
+                  <p className="text-slate-500 dark:text-slate-400 mt-1">Upload a raw image to instantly apply professional real estate lighting.</p>
                 </header>
 
                 {/* Uploader / Processor / Result Area */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-10">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-10 transition-colors">
                   
                   {processingState === 'idle' && (
                     <div>
@@ -445,23 +508,23 @@
                           setFile('sample-villa.jpg');
                           handleSimulatedUpload();
                         }}
-                        className="border-2 border-dashed border-slate-300 rounded-xl p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 hover:border-blue-400 transition-colors group"
+                        className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-blue-400 dark:hover:border-blue-500 transition-colors group"
                       >
-                        <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <div className="w-16 h-16 bg-blue-50 dark:bg-blue-950/60 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                           <UploadCloud className="w-8 h-8" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-900 mb-1">Click to test sample or drag photo here</h3>
-                        <p className="text-slate-500 text-sm max-w-sm">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Click to test demo or drag photo here</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm">
                           Supports JPG, PNG, RAW formats up to 25MB.
                         </p>
-                        <div className="mt-6 flex gap-3">
+                        <div className="mt-6 flex flex-wrap gap-3 justify-center">
                           <button 
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               if (fileInputRef.current) fileInputRef.current.click();
                             }}
-                            className="bg-slate-900 text-white px-6 py-2 rounded-lg font-medium text-sm hover:bg-slate-800 transition-colors"
+                            className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2 rounded-lg font-medium text-sm hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-sm"
                           >
                             Browse Files
                           </button>
@@ -472,7 +535,7 @@
                               setFile('sample-luxury-home.jpg');
                               handleSimulatedUpload();
                             }}
-                            className="bg-blue-50 text-blue-700 border border-blue-200 px-6 py-2 rounded-lg font-medium text-sm hover:bg-blue-100 transition-colors"
+                            className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/80 px-6 py-2 rounded-lg font-medium text-sm hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
                           >
                             Quick Demo Photo
                           </button>
@@ -483,27 +546,27 @@
 
                   {(processingState === 'uploading' || processingState === 'processing') && (
                     <div className="py-20 flex flex-col items-center justify-center text-center">
-                      <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center mb-8 relative">
+                      <div className="w-20 h-20 bg-blue-50 dark:bg-blue-950/50 rounded-2xl flex items-center justify-center mb-8 relative">
                         <Wand2 className={`w-10 h-10 text-blue-500 ${processingState === 'processing' ? 'animate-bounce' : ''}`} />
                         <div className="absolute inset-0 border-4 border-blue-500 rounded-2xl animate-ping opacity-20"></div>
                       </div>
                       
-                      <h3 className="text-2xl font-bold text-slate-900 mb-2">
+                      <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                         {processingState === 'uploading' ? 'Uploading Image...' : 'Applying AI Magic...'}
                       </h3>
-                      <p className="text-slate-500 mb-8 max-w-sm">
+                      <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm">
                         {processingState === 'uploading' 
                           ? 'Securely transferring your file to our servers.' 
                           : 'Analyzing lighting, recovering shadows, and replacing the sky.'}
                       </p>
                       
-                      <div className="w-full max-w-md bg-slate-100 rounded-full h-3 overflow-hidden">
+                      <div className="w-full max-w-md bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
                         <div 
                           className="bg-blue-600 h-full rounded-full transition-all duration-100 ease-out"
                           style={{ width: `${progress}%` }}
                         ></div>
                       </div>
-                      <div className="text-sm text-slate-400 mt-2 font-medium">
+                      <div className="text-sm text-slate-400 dark:text-slate-500 mt-2 font-medium">
                         {progress}% Complete
                       </div>
                     </div>
@@ -513,31 +576,31 @@
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+                          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center">
                             <CheckCircle2 className="w-6 h-6" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-slate-900">Enhancement Complete</h3>
-                            <p className="text-sm text-slate-500">Drag the slider to compare.</p>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Enhancement Complete</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Drag the slider to compare.</p>
                           </div>
                         </div>
                         <button 
                           onClick={resetUploader}
-                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                          className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                         >
                           Upload Another
                         </button>
                       </div>
 
                       {/* Interactive Slider */}
-                      <div className="rounded-xl overflow-hidden border border-slate-200 shadow-md">
+                      <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md">
                         <BeforeAfterSlider customImg={customImage} />
                       </div>
 
                       <div className="flex justify-end gap-3 pt-4">
                         <button 
                           onClick={() => alert("Photo saved to your gallery!")}
-                          className="px-6 py-2 rounded-lg font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+                          className="px-6 py-2 rounded-lg font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                         >
                           Save to Gallery
                         </button>
@@ -567,11 +630,11 @@
           onClick={(e) => e.preventDefault()}
           className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${
             active 
-              ? 'bg-blue-50 text-blue-700' 
-              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300' 
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <div className={active ? 'text-blue-600' : 'text-slate-400'}>
+          <div className={active ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}>
             {icon}
           </div>
           {label}
@@ -591,7 +654,7 @@
 
       return (
         <div 
-          className="relative w-full aspect-video bg-slate-200 group select-none"
+          className="relative w-full aspect-video bg-slate-200 dark:bg-slate-800 group select-none"
           ref={containerRef}
         >
           {/* AFTER Image (Enhanced) */}
@@ -635,11 +698,11 @@
 
           {/* Custom Handle Visual */}
           <div 
-            className="absolute inset-y-0 w-1 bg-white shadow-[0_0_10px_rgba(0,0,0,0.5)] pointer-events-none z-10"
+            className="absolute inset-y-0 w-1 bg-white shadow-[0_0_10px_rgba(0,0,0,0.6)] pointer-events-none z-10"
             style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
           >
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center">
-              <MoveHorizontal className="w-5 h-5 text-slate-700" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white dark:bg-slate-900 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+              <MoveHorizontal className="w-5 h-5 text-slate-700 dark:text-slate-200" />
             </div>
           </div>
         </div>
