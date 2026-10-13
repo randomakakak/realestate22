@@ -1,0 +1,614 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Camera, 
+  Sun, 
+  Moon,
+  Wand2, 
+  CheckCircle2, 
+  UploadCloud, 
+  Image as ImageIcon, 
+  LayoutDashboard, 
+  Settings, 
+  LogOut, 
+  ChevronRight, 
+  ArrowRight, 
+  MoveHorizontal 
+} from 'lucide-react';
+
+export default function CurbAppealApp() {
+  const [currentView, setCurrentView] = useState('landing'); // 'landing' | 'dashboard'
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('curbappeal_theme');
+      if (saved) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return true; // default dark mode preference
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('curbappeal_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('curbappeal_theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-blue-100 dark:selection:bg-blue-900 transition-colors duration-200">
+      {currentView === 'landing' ? (
+        <LandingPage 
+          onLogin={() => setCurrentView('dashboard')} 
+          isDarkMode={isDarkMode}
+          onToggleTheme={toggleDarkMode}
+        />
+      ) : (
+        <Dashboard 
+          onLogout={() => setCurrentView('landing')} 
+          isDarkMode={isDarkMode}
+          onToggleTheme={toggleDarkMode}
+        />
+      )}
+    </div>
+  );
+}
+
+function ThemeToggleButton({ isDarkMode, onToggleTheme }) {
+  return (
+    <button
+      onClick={onToggleTheme}
+      className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+      title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+      aria-label="Toggle theme"
+    >
+      {isDarkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
+    </button>
+  );
+}
+
+function LandingPage({ onLogin, isDarkMode, onToggleTheme }) {
+  return (
+    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+      {/* Navigation */}
+      <nav className="w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 transition-colors">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+            <div className="bg-blue-600 p-2 rounded-lg shadow-md shadow-blue-500/20">
+              <Camera className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">CurbAppeal AI</span>
+          </div>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <a href="#features" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium text-sm hidden sm:block">
+              Features
+            </a>
+            <a href="#pricing" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium text-sm hidden sm:block">
+              Pricing
+            </a>
+            
+            {/* Theme Toggle */}
+            <ThemeToggleButton isDarkMode={isDarkMode} onToggleTheme={onToggleTheme} />
+
+            <button 
+              onClick={onLogin}
+              className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium text-sm px-3 py-2"
+            >
+              Sign In
+            </button>
+            <button 
+              onClick={onLogin}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors shadow-sm"
+            >
+              Start Free Trial
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <main className="flex-grow">
+        <section className="relative pt-20 pb-32 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-sm font-medium mb-8 border border-blue-200 dark:border-blue-800/60">
+              <Wand2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span>V2.0 is live: Now with automatic sky replacement</span>
+            </div>
+            <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight max-w-4xl mx-auto leading-tight">
+              Turn dark listings into <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400">sold properties.</span>
+            </h1>
+            <p className="mt-6 text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+              Upload raw, poorly lit real estate photos. Get back stunning, HDR-quality, listing-ready images in seconds using our specialized AI. No manual editing required.
+            </p>
+            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+              <button 
+                onClick={onLogin}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 group"
+              >
+                Try it for free
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button 
+                onClick={onLogin}
+                className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-sm"
+              >
+                View Gallery
+              </button>
+            </div>
+            <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">No credit card required • 10 free edits</p>
+          </div>
+          
+          {/* Decorative background glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-blue-500/10 dark:bg-blue-500/15 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
+        </section>
+
+        {/* Features Grid */}
+        <section id="features" className="py-24 bg-white dark:bg-slate-900/60 border-y border-slate-200/80 dark:border-slate-800/80 transition-colors">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Everything you need to showcase properties</h2>
+              <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">Built specifically for real estate agents and photographers.</p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              <FeatureCard 
+                icon={<Sun className="w-6 h-6 text-amber-500" />}
+                title="1-Click HDR Lighting"
+                description="Our AI balances shadows and highlights perfectly, simulating bracketed HDR photography from a single shot."
+              />
+              <FeatureCard 
+                icon={<ImageIcon className="w-6 h-6 text-blue-500" />}
+                title="Auto Sky Replacement"
+                description="Gloomy day? We automatically detect dull skies and replace them with beautiful, natural-looking sunny skies."
+              />
+              <FeatureCard 
+                icon={<Camera className="w-6 h-6 text-emerald-500" />}
+                title="Window Pulls"
+                description="Never lose the view again. We fix blown-out windows so potential buyers can see exactly what's outside."
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing */}
+        <section id="pricing" className="py-24 bg-slate-50 dark:bg-slate-950 transition-colors">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Simple, transparent pricing</h2>
+              <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">Pay as you go or subscribe for massive discounts.</p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
+              <PricingCard 
+                tier="Starter"
+                price="Free"
+                description="Perfect for testing the waters."
+                features={["10 free image edits", "Standard resolution", "Watermarked"]}
+                buttonText="Start Free"
+                onClick={onLogin}
+              />
+              <PricingCard 
+                tier="Pro Agent"
+                price="$29"
+                period="/mo"
+                description="Everything an active agent needs."
+                features={["100 image edits / month", "High-res downloads", "No watermarks", "Auto sky replacement"]}
+                isPopular
+                buttonText="Subscribe Now"
+                onClick={onLogin}
+              />
+              <PricingCard 
+                tier="Brokerage"
+                price="$99"
+                period="/mo"
+                description="For teams and high-volume shooters."
+                features={["Unlimited edits", "API Access", "Team accounts", "Priority processing"]}
+                buttonText="Contact Sales"
+                onClick={onLogin}
+              />
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 dark:bg-black text-slate-400 py-12 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Camera className="w-6 h-6 text-blue-500" />
+            <span className="font-bold text-xl text-white">CurbAppeal AI</span>
+          </div>
+          <p className="text-sm">© 2026 CurbAppeal AI Inc. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, description }) {
+  return (
+    <div className="bg-slate-50 dark:bg-slate-900/90 p-8 rounded-2xl border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+      <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center mb-6">
+        {icon}
+      </div>
+      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{title}</h3>
+      <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{description}</p>
+    </div>
+  );
+}
+
+function PricingCard({ tier, price, period, description, features, isPopular, buttonText, onClick }) {
+  return (
+    <div className={`relative bg-white dark:bg-slate-900 rounded-2xl p-8 border flex flex-col justify-between ${
+      isPopular 
+        ? 'border-blue-500 shadow-xl shadow-blue-500/10 scale-105 z-10 ring-2 ring-blue-500' 
+        : 'border-slate-200 dark:border-slate-800 shadow-sm'
+    }`}>
+      <div>
+        {isPopular && (
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold tracking-wide shadow-md">
+            MOST POPULAR
+          </div>
+        )}
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{tier}</h3>
+        <div className="mt-4 flex items-baseline text-5xl font-extrabold text-slate-900 dark:text-white">
+          {price}
+          {period && <span className="ml-1 text-xl font-medium text-slate-500 dark:text-slate-400">{period}</span>}
+        </div>
+        <p className="mt-4 text-slate-600 dark:text-slate-400">{description}</p>
+        <ul className="mt-8 space-y-4">
+          {features.map((feature, idx) => (
+            <li key={idx} className="flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
+              <span className="text-slate-700 dark:text-slate-300">{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <button 
+        onClick={onClick}
+        className={`mt-8 w-full py-3 px-4 rounded-xl font-bold transition-all ${
+          isPopular 
+            ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20' 
+            : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white'
+        }`}
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
+}
+
+function Dashboard({ onLogout, isDarkMode, onToggleTheme }) {
+  const [file, setFile] = useState(null);
+  const [customImage, setCustomImage] = useState(null);
+  const [processingState, setProcessingState] = useState('idle'); // idle | uploading | processing | complete
+  const [progress, setProgress] = useState(0);
+  const fileInputRef = useRef(null);
+
+  const handleSimulatedUpload = (customImgUrl = null) => {
+    if (customImgUrl) {
+      setCustomImage(customImgUrl);
+    }
+    setProcessingState('uploading');
+    setProgress(0);
+    
+    let progressVal = 0;
+    const uploadInterval = setInterval(() => {
+      progressVal += 5;
+      setProgress(progressVal);
+      if (progressVal >= 100) {
+        clearInterval(uploadInterval);
+        setProcessingState('processing');
+        setProgress(0);
+        
+        let processVal = 0;
+        const processInterval = setInterval(() => {
+          processVal += 2;
+          setProgress(processVal);
+          if (processVal >= 100) {
+            clearInterval(processInterval);
+            setProcessingState('complete');
+          }
+        }, 50);
+      }
+    }, 30);
+  };
+
+  const handleFileSelect = (e) => {
+    const selectedFile = e.target.files && e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile.name);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        handleSimulatedUpload(event.target.result);
+      };
+      reader.readAsDataURL(selectedFile);
+    }
+  };
+
+  const resetUploader = () => {
+    setFile(null);
+    setCustomImage(null);
+    setProcessingState('idle');
+    setProgress(0);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-950 transition-colors duration-200">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col hidden md:flex transition-colors">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={onLogout}>
+            <div className="bg-blue-600 p-1.5 rounded-md">
+              <Camera className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-lg text-slate-900 dark:text-white">CurbAppeal</span>
+          </div>
+          <ThemeToggleButton isDarkMode={isDarkMode} onToggleTheme={onToggleTheme} />
+        </div>
+        <nav className="flex-1 px-4 py-6 space-y-1">
+          <DashboardNavLink icon={<LayoutDashboard />} label="Enhancer" active />
+          <DashboardNavLink icon={<ImageIcon />} label="My Gallery" />
+          <DashboardNavLink icon={<Settings />} label="Settings" />
+        </nav>
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between px-2 py-2">
+            <div className="text-sm">
+              <p className="font-medium text-slate-900 dark:text-white">Agent Account</p>
+              <p className="text-slate-500 dark:text-slate-400">9 edits remaining</p>
+            </div>
+            <button onClick={onLogout} className="text-slate-400 hover:text-red-500 transition-colors" title="Logout">
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col h-full overflow-y-auto">
+        {/* Mobile Header */}
+        <header className="md:hidden bg-white dark:bg-slate-900 h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            <Camera className="w-6 h-6 text-blue-600" />
+            <span className="font-bold text-lg dark:text-white">CurbAppeal</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <ThemeToggleButton isDarkMode={isDarkMode} onToggleTheme={onToggleTheme} />
+            <button onClick={onLogout} className="text-slate-500 dark:text-slate-400 p-2">
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </header>
+
+        <div className="flex-1 p-6 md:p-10">
+          <div className="max-w-4xl mx-auto space-y-8">
+            
+            <header>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Enhance Property Photo</h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">Upload a raw image to instantly apply professional real estate lighting.</p>
+            </header>
+
+            {/* Uploader / Processor / Result Area */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-10 transition-colors">
+              
+              {processingState === 'idle' && (
+                <div>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileSelect} 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
+                  <div 
+                    onClick={() => {
+                      setFile('sample-villa.jpg');
+                      handleSimulatedUpload();
+                    }}
+                    className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-blue-400 dark:hover:border-blue-500 transition-colors group"
+                  >
+                    <div className="w-16 h-16 bg-blue-50 dark:bg-blue-950/60 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <UploadCloud className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Click to test demo or drag photo here</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm">
+                      Supports JPG, PNG, RAW formats up to 25MB.
+                    </p>
+                    <div className="mt-6 flex flex-wrap gap-3 justify-center">
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (fileInputRef.current) fileInputRef.current.click();
+                        }}
+                        className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2 rounded-lg font-medium text-sm hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-sm"
+                      >
+                        Browse Files
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFile('sample-luxury-home.jpg');
+                          handleSimulatedUpload();
+                        }}
+                        className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/80 px-6 py-2 rounded-lg font-medium text-sm hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
+                      >
+                        Quick Demo Photo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {(processingState === 'uploading' || processingState === 'processing') && (
+                <div className="py-20 flex flex-col items-center justify-center text-center">
+                  <div className="w-20 h-20 bg-blue-50 dark:bg-blue-950/50 rounded-2xl flex items-center justify-center mb-8 relative">
+                    <Wand2 className={`w-10 h-10 text-blue-500 ${processingState === 'processing' ? 'animate-bounce' : ''}`} />
+                    <div className="absolute inset-0 border-4 border-blue-500 rounded-2xl animate-ping opacity-20"></div>
+                  </div>
+                  
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                    {processingState === 'uploading' ? 'Uploading Image...' : 'Applying AI Magic...'}
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm">
+                    {processingState === 'uploading' 
+                      ? 'Securely transferring your file to our servers.' 
+                      : 'Analyzing lighting, recovering shadows, and replacing the sky.'}
+                  </p>
+                  
+                  <div className="w-full max-w-md bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="bg-blue-600 h-full rounded-full transition-all duration-100 ease-out"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                  <div className="text-sm text-slate-400 dark:text-slate-500 mt-2 font-medium">
+                    {progress}% Complete
+                  </div>
+                </div>
+              )}
+
+              {processingState === 'complete' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center">
+                        <CheckCircle2 className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Enhancement Complete</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Drag the slider to compare.</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={resetUploader}
+                      className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                    >
+                      Upload Another
+                    </button>
+                  </div>
+
+                  {/* Interactive Slider */}
+                  <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md">
+                    <BeforeAfterSlider customImg={customImage} />
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4">
+                    <button 
+                      onClick={() => alert("Photo saved to your gallery!")}
+                      className="px-6 py-2 rounded-lg font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      Save to Gallery
+                    </button>
+                    <button 
+                      onClick={() => alert("Downloading high-resolution HDR photo...")}
+                      className="px-6 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-2"
+                    >
+                      Download HD
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function DashboardNavLink({ icon, label, active }) {
+  return (
+    <a 
+      href="#" 
+      onClick={(e) => e.preventDefault()}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${
+        active 
+          ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300' 
+          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+      }`}
+    >
+      <div className={active ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}>
+        {icon}
+      </div>
+      {label}
+    </a>
+  );
+}
+
+function BeforeAfterSlider({ customImg }) {
+  const [sliderPosition, setSliderPosition] = useState(50);
+  const containerRef = useRef(null);
+
+  const handleSliderChange = (e) => {
+    setSliderPosition(e.target.value);
+  };
+
+  const imageUrl = customImg || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
+
+  return (
+    <div 
+      className="relative w-full aspect-video bg-slate-200 dark:bg-slate-800 group select-none"
+      ref={containerRef}
+    >
+      {/* AFTER Image (Enhanced) */}
+      <img 
+        src={imageUrl} 
+        alt="Enhanced property" 
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+      />
+      <div className="absolute top-4 right-4 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm opacity-90 pointer-events-none z-10">
+        AI ENHANCED
+      </div>
+
+      {/* BEFORE Image (Raw/Dull) */}
+      <div 
+        className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none"
+        style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
+      >
+        <img 
+          src={imageUrl} 
+          alt="Original property" 
+          className="absolute inset-0 w-full h-full object-cover max-w-none pointer-events-none"
+          style={{ 
+            filter: 'brightness(0.65) contrast(0.85) saturate(0.7) sepia(0.2)' 
+          }}
+        />
+        <div className="absolute top-4 left-4 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded shadow-sm opacity-90 z-10">
+          ORIGINAL
+        </div>
+      </div>
+
+      {/* Slider Input */}
+      <input
+        type="range"
+        min="0"
+        max="100"
+        value={sliderPosition}
+        onChange={handleSliderChange}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20"
+        aria-label="Image comparison slider"
+      />
+
+      {/* Custom Handle Visual */}
+      <div 
+        className="absolute inset-y-0 w-1 bg-white shadow-[0_0_10px_rgba(0,0,0,0.6)] pointer-events-none z-10"
+        style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
+      >
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white dark:bg-slate-900 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+          <MoveHorizontal className="w-5 h-5 text-slate-700 dark:text-slate-200" />
+        </div>
+      </div>
+    </div>
+  );
+}
